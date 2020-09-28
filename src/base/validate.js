@@ -26,10 +26,10 @@ const isEmptyValue = (value, schema) => {
   return !value;
 };
 
-export const getValidateText = (obj = {}) => {
+export const getValidateText = (obj = {}, _formData, val) => {
   const { value, defaultValue, required, schema = {} } = obj;
 
-  const {
+  let {
     type,
     pattern,
     message,
@@ -43,6 +43,9 @@ export const getValidateText = (obj = {}) => {
     maxItems, // list
     uniqueItems, // list
   } = schema;
+  pattern = convertValue(pattern, _formData, val);
+  minimum = convertValue(minimum, _formData, val);
+  maximum = convertValue(maximum, _formData, val);
   // TODO: 这里要不要把 null 算进去呢？感觉算进去更合理一点
   let finalValue = [undefined, null].indexOf(value) > -1 ? defaultValue : value;
   // fix: number = 0 返回空字符串
@@ -156,7 +159,7 @@ export const getValidateText = (obj = {}) => {
   return false;
 };
 
-export const dealTypeValidate = (key, value, schema = {}, _formData) => {
+export const dealTypeValidate = (key, value, schema = {}, _formData, val) => {
   const checkList = [];
   const { type, items } = schema;
   const obj = {
@@ -172,7 +175,7 @@ export const dealTypeValidate = (key, value, schema = {}, _formData) => {
       checkList.push(...list);
     });
   }
-  if (getValidateText(obj)) {
+  if (getValidateText(obj, _formData, val)) {
     checkList.push(key);
   }
   return checkList;
@@ -211,7 +214,7 @@ export const getValidateList = (val = {}, schema = {}, formData) => {
       const hidden = keyHidden(schema, val);
       const _hidden = convertValue(hidden, _formData, val);
       if (!_hidden) {
-        const list = dealTypeValidate(key, value, schema, _formData);
+        const list = dealTypeValidate(key, value, schema, _formData, val);
         checkList.push(...list);
       }
     });
